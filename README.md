@@ -13,3 +13,9 @@ ca65 src/helloworld.asm
 ca65 src/reset.asm
 ld65 src/reset.o src/helloworld.o -C nes.cfg -o helloworld.nes
 ```
+
+## To Run:
+`java -jar ~/Downloads/Nintaco_bin_2020-05-01/Nintaco.jar`
+
+
+## Notes:
