@@ -74,20 +74,18 @@ load_palettes:
   ; STA $0202 ; attributes of first sprite
   ; LDA #$80
   ; STA $0203 ; X-coord of first sprite
-load_sprites:
-  LDA sprite_1,X
+load_ship_sprites:
+  LDA ship_NW,X
   STA $0200,X
-  INX
-  CPX #$04
-  BNE load_sprites
-
-  LDX #$00
-load_more_sprites:
-  LDA sprite_2,X
+  LDA ship_NE,X
   STA $0204,X
+  LDA ship_SW,X
+  STA $0208,X
+  LDA ship_SE,X
+  STA $020c,X
   INX
   CPX #$04
-  BNE load_more_sprites
+  BNE load_ship_sprites
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
@@ -108,12 +106,15 @@ forever:
 palettes:
 .byte $02, $24, $2C, $2A
 
-sprite_1:
 ;     Y    tile attr X
+ship_NW:
 .byte $70, $05, $00, $80
-sprite_2:
+ship_NE:
 .byte $70, $06, $00, $88
-
+ship_SW:
+.byte $78, $07, $00, $80
+ship_SE:
+.byte $78, $08, $00, $88
 
 .segment "CHR"
 .incbin "graphics.chr"
