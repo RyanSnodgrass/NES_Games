@@ -6,3 +6,6 @@ src/helloworld.o: src/helloworld.asm
 
 src/reset.o: src/reset.asm
 	ca65 src/reset.asm -o src/reset.o
+
+clean:
+	rm -f src/helloworld.o src/reset.o
