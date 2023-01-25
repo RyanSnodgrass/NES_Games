@@ -93,13 +93,129 @@ load_ship_sprites:
   BNE load_ship_sprites
 
   ; write a nametable
-  ; big stars first
+  ; big stars first at position $206b
+  ; There are 4 nametables. addresses at $2000, $2400, $2800, $2c00
+  ; Weirdly, instead of writing directly to those addresses, we send
+  ; how many bytes away from the starting address the tile is. This might
+  ; be how we avoid colliding with some of our "keyword" addresses in the
+  ; low $2000s
   LDA PPUSTATUS
-  LDA #$20
+  LDA #$20       ; position BG sprite at $20 (high byte)
   STA PPUADDR
-  LDA #$6b
+  LDA #$6b       ; position BG sprite at $6b (low byte)
   STA PPUADDR
-  LDX #$2f
+  LDX #$2f       ; use BG sprite at position 2f
+  STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$21
+	STA PPUADDR
+	LDA #$57
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$22
+	STA PPUADDR
+	LDA #$23
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$23
+	STA PPUADDR
+	LDA #$52
+	STA PPUADDR
+	STX PPUDATA
+
+	; next, small star 1
+	LDA PPUSTATUS
+	LDA #$20
+	STA PPUADDR
+	LDA #$74
+	STA PPUADDR
+	LDX #$2d
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$21
+	STA PPUADDR
+	LDA #$43
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$21
+	STA PPUADDR
+	LDA #$5d
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$21
+	STA PPUADDR
+	LDA #$73
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$22
+	STA PPUADDR
+	LDA #$2f
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$22
+	STA PPUADDR
+	LDA #$f7
+	STA PPUADDR
+	STX PPUDATA
+
+	; finally, small star 2
+	LDA PPUSTATUS
+	LDA #$20
+	STA PPUADDR
+	LDA #$f1
+	STA PPUADDR
+	LDX #$2e
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$21
+	STA PPUADDR
+	LDA #$a8
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$22
+	STA PPUADDR
+	LDA #$7a
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$23
+	STA PPUADDR
+	LDA #$44
+	STA PPUADDR
+	STX PPUDATA
+
+	LDA PPUSTATUS
+	LDA #$23
+	STA PPUADDR
+	LDA #$7c
+	STA PPUADDR
+	STX PPUDATA
+
+  ; little dude
+  LDA PPUSTATUS
+  LDA #$21
+  STA PPUADDR
+  LDA #$18
+  STA PPUADDR
+  LDX #$30
   STX PPUDATA
 
   ; finally an attribute
@@ -109,6 +225,22 @@ load_ship_sprites:
   LDA #$c2
   STA PPUADDR
   LDA #%01000000
+  STA PPUDATA
+
+  LDA PPUSTATUS
+  LDA #$23
+  STA PPUADDR
+  LDA #$e0
+  STA PPUADDR
+  LDA #%00001100
+  STA PPUDATA
+
+  LDA PPUSTATUS
+  LDA #$23
+  STA PPUADDR
+  LDA #$d6
+  STA PPUADDR
+  LDA #%00000001
   STA PPUDATA
 
 vblankwait:       ; wait for another vblank before continuing
@@ -128,11 +260,13 @@ forever:
 
 .segment "RODATA"
 palettes:
+  ; backgrounds
   .byte $0f, $12, $23, $27
   .byte $0f, $2b, $3c, $39
   .byte $0f, $0c, $07, $13
   .byte $0f, $19, $09, $29
 
+  ; sprites
   .byte $0f, $2d, $10, $15
   .byte $0f, $19, $09, $29
   .byte $0f, $19, $09, $29
