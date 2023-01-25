@@ -17,6 +17,11 @@
   STA OAMADDR      ; store value from accumulator ($00) into address at OAMADDR ($2003)
   LDA #$02         ; load immediate value $02 into accumulator
   STA OAMDMA       ; store value from accumulator ($02) into address at OAMDMA ($4014)
+
+  ; set scrolling of backround tiles to $00 at startup
+  LDA #$00         ; Load immediate value $00 into accumulator
+  STA $2005        ; store value from accumulator ($00) into address $2005 (high byte)
+  STA $2005        ; store value from accumulator ($00) into address $2005 (low byte)
   RTI
 .endproc
 
@@ -60,7 +65,7 @@ load_palettes:
   LDA palettes,X
   STA PPUDATA
   INX
-  CPX #$04
+  CPX #$20
   BNE load_palettes
 
   ; write sprite data
@@ -87,6 +92,25 @@ load_ship_sprites:
   CPX #$04
   BNE load_ship_sprites
 
+  ; write a nametable
+  ; big stars first
+  LDA PPUSTATUS
+  LDA #$20
+  STA PPUADDR
+  LDA #$6b
+  STA PPUADDR
+  LDX #$2f
+  STX PPUDATA
+
+  ; finally an attribute
+  LDA PPUSTATUS
+  LDA #$23
+  STA PPUADDR
+  LDA #$c2
+  STA PPUADDR
+  LDA #%01000000
+  STA PPUDATA
+
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
@@ -104,7 +128,15 @@ forever:
 
 .segment "RODATA"
 palettes:
-.byte $02, $24, $2C, $2A
+  .byte $0f, $12, $23, $27
+  .byte $0f, $2b, $3c, $39
+  .byte $0f, $0c, $07, $13
+  .byte $0f, $19, $09, $29
+
+  .byte $0f, $2d, $10, $15
+  .byte $0f, $19, $09, $29
+  .byte $0f, $19, $09, $29
+  .byte $0f, $19, $09, $29
 
 ;     Y    tile attr X
 ship_NW:
