@@ -19,6 +19,9 @@
   LDA #$02         ; load immediate value $02 into accumulator
   STA OAMDMA       ; store value from accumulator ($02) into address at OAMDMA ($4014)
 
+  ; update tiles *after* DMA transfer
+  JSR draw_player
+
   ; set scrolling of backround tiles to $00 at startup
   LDA #$00         ; Load immediate value $00 into accumulator
   STA $2005        ; store value from accumulator ($00) into address $2005 (high byte)
@@ -220,51 +223,6 @@ load_palettes:
   LDA #%00000001
   STA PPUDATA
 
-  ; write sprite data
-  ; LDA #$70
-  ; STA $0200 ; Y-coord of first sprite
-  ; LDA #$05
-  ; STA $0201 ; tile number of first sprite
-  ; LDA #$00
-  ; STA $0202 ; attributes of first sprite
-  ; LDA #$80
-  ; STA $0203 ; X-coord of first sprite
-  ;
-  ;
-  ; Indexed Mode
-  ; Combines a fixed absolute address with the values of an index register
-  ; All this does is move the memory address (operand) to the added value of
-  ; the X (or Y) register.
-  ;
-  ; STX #$ff
-  ; LDA $8000,X
-  ; This loads into the Accumulator the value stored at address $80ff
-  ;
-  ; You can also do this with data in the RODATA segment like palletes and sprites
-  ;
-  ; palettes:
-  ;   .byte $29, $19, $09, $0f
-  ; load_palettes:
-	;   LDA palettes,X
-	;   STA PPUDATA
-	;   INX
-	;   CPX #$04
-	;   BNE load_palettes
-
-  LDX #$00         ; Load into X immediate value of $00
-                   ; In other words zero out the X register
-load_ship_sprites:
-  ; Index through the .bytes of the pallete with the value of X register. Load
-  ; that .byte value into the Accumulator
-  LDA player_ship,X
-  ; Change the operand (in this case mem address $0200) to value of the
-  ; operand + the X register ($0200 + $ff = $02ff). Store the value of the
-  ; Accumulator into that new mem address ($02ff).
-  STA $0200,X
-  INX
-  CPX #$10
-  BNE load_ship_sprites
-
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
@@ -275,6 +233,78 @@ vblankwait:       ; wait for another vblank before continuing
   STA PPUMASK
 forever:
   JMP forever
+.endproc
+
+.proc draw_player
+  ; save registers
+  PHP              ; push the processor status register ("P") onto the stack
+  PHA              ; push the Accumulator ("A") value onto the stack
+  ; There are no opcodes to push values from the X or Y registers onto the stack
+  ; You have to transfer them to the Accumulator first, then to the stack.
+  TXA              ; Transfer value of X registor to Accumulator
+  PHA              ; push the Accumulator (formerly "X") value onto the stack
+  TYA              ; Transfer value of Y register to Accumulator
+  PHA              ; push the Accumulator (formerly "Y") value onto the stack
+
+  ; write player ship tile numbers
+  LDA #$05         ; load to Accumulator top right ship tile ($05)
+  STA $0201        ; store to sprite buffer
+  LDA #$06         ; ...
+  STA $0205        ; ...
+  LDA #$07
+  STA $0209
+  LDA #$08
+  STA $020d
+
+  ; write player ship tile attributes
+  ; use palette 0
+  LDA #$00
+  STA $0202
+  STA $0206
+  STA $020a
+  STA $020e
+
+  ; store tile locations
+  ; top left tile
+  LDA player_y
+  STA $0200
+  LDA player_x
+  STA $0203
+
+  ; top right tile (x+8)
+  LDA player_y
+  STA $0204
+  LDA player_x
+  CLC
+  ADC #$08                   ; Add 8 to player_x position value
+  STA $0207
+
+  ; bottom left tile (y+8)
+  LDA player_y
+  CLC
+  ADC #$08
+  STA $0208
+  LDA player_x
+  STA $020b
+
+  ; bottom right tile (x+8 y+8)
+  LDA player_y
+  CLC
+  ADC #$08
+  STA $020c
+  LDA player_x
+  CLC
+  ADC #$08
+  STA $020f
+
+  ; restore registers and return
+  PLA
+  TAY
+  PLA
+  TAX
+  PLA
+  PLP
+  RTS
 .endproc
 
 .segment "VECTORS"

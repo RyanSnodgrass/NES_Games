@@ -20,7 +20,7 @@ vblankwait:
 	BPL vblankwait
 
 	; initialize zero page
-	; not sure what the #$80 and #$a0 values are doing in the zero page.
+	; we define the player's starting X and Y position relative to the sprite
 	LDA #$80
 	STA player_x
 	LDA #$a0

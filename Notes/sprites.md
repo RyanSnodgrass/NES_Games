@@ -36,3 +36,65 @@ To make the NES fast it assigns a contiguous block of 256 bytes where we define
 each individual sprite quad data. This block is otherwise known as a "page" or
 "sprite buffer." We can start this buffer anywhere but convention has it start
 at `$0200` and end at `$02ff`.
+
+## How to load sprites
+Each sprite has 4 bytes:
+Y coordinate
+Tile Number
+Attributes
+X coordinate
+
+Starting at address `$0200` store the Y coordinate of the sprite. We previously defined the sprite buffer to start at `$0200`
+in the NMI handler using `OAMADDR` and `OAMDMA`.
+```
+LDA #$70
+STA $0200 ; Y-coord of first sprite
+LDA #$05
+STA $0201 ; tile number of first sprite
+LDA #$00
+STA $0202 ; attributes of first sprite
+LDA #$80
+STA $0203 ; X-coord of first sprite
+```
+
+## Index Mode
+Combines a fixed absolute address with the values of an index register
+All this does is move the memory address (operand) to the added value of
+the X (or Y) register.
+
+* Memory Addresses *
+```
+STX #$ff
+LDA $8000,X
+```
+This loads into the Accumulator the value stored at address $80ff
+
+* .byte Read Only Data *
+You can also do this with data in the RODATA segment like palletes and sprites
+```
+  palettes:
+    .byte $29, $19, $09, $0f
+  load_palettes:
+	LDA palettes,X
+	STA PPUDATA
+	INX
+	CPX #$04
+	BNE load_palettes
+```
+
+Full working example:
+```
+  LDX #$00         ; Load into X immediate value of $00
+                   ; In other words zero out the X register
+load_ship_sprites:
+  ; Index through the .bytes of the pallete with the value of X register. Load
+  ; that .byte value into the Accumulator
+  LDA player_ship,X
+  ; Change the operand (in this case mem address $0200) to value of the
+  ; operand + the X register ($0200 + $ff = $02ff). Store the value of the
+  ; Accumulator into that new mem address ($02ff).
+  STA $0200,X
+  INX
+  CPX #$10
+  BNE load_ship_sprites
+```
