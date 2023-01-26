@@ -221,8 +221,6 @@ load_palettes:
   STA PPUDATA
 
   ; write sprite data
-  LDX #$00         ; Load into X immediate value of $00
-                   ; In other words zero out the X register
   ; LDA #$70
   ; STA $0200 ; Y-coord of first sprite
   ; LDA #$05
@@ -231,17 +229,40 @@ load_palettes:
   ; STA $0202 ; attributes of first sprite
   ; LDA #$80
   ; STA $0203 ; X-coord of first sprite
+  ;
+  ;
+  ; Indexed Mode
+  ; Combines a fixed absolute address with the values of an index register
+  ; All this does is move the memory address (operand) to the added value of
+  ; the X (or Y) register.
+  ;
+  ; STX #$ff
+  ; LDA $8000,X
+  ; This loads into the Accumulator the value stored at address $80ff
+  ;
+  ; You can also do this with data in the RODATA segment like palletes and sprites
+  ;
+  ; palettes:
+  ;   .byte $29, $19, $09, $0f
+  ; load_palettes:
+	;   LDA palettes,X
+	;   STA PPUDATA
+	;   INX
+	;   CPX #$04
+	;   BNE load_palettes
+
+  LDX #$00         ; Load into X immediate value of $00
+                   ; In other words zero out the X register
 load_ship_sprites:
-  LDA ship_NW,X
+  ; Index through the .bytes of the pallete with the value of X register. Load
+  ; that .byte value into the Accumulator
+  LDA player_ship,X
+  ; Change the operand (in this case mem address $0200) to value of the
+  ; operand + the X register ($0200 + $ff = $02ff). Store the value of the
+  ; Accumulator into that new mem address ($02ff).
   STA $0200,X
-  LDA ship_NE,X
-  STA $0204,X
-  LDA ship_SW,X
-  STA $0208,X
-  LDA ship_SE,X
-  STA $020c,X
   INX
-  CPX #$04
+  CPX #$10
   BNE load_ship_sprites
 
 vblankwait:       ; wait for another vblank before continuing
@@ -259,7 +280,7 @@ forever:
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
-.segment "RODATA"
+.segment "RODATA"            ; Read only data
 palettes:
   ; backgrounds
   .byte $0f, $12, $23, $27
@@ -273,15 +294,12 @@ palettes:
   .byte $0f, $19, $09, $29
   .byte $0f, $19, $09, $29
 
-;     Y    tile attr X
-ship_NW:
-.byte $70, $05, $00, $80
-ship_NE:
-.byte $70, $06, $00, $88
-ship_SW:
-.byte $78, $07, $00, $80
-ship_SE:
-.byte $78, $08, $00, $88
+player_ship:
+  ;      Y  tile  attr  X
+  .byte $70, $05, $00, $80
+  .byte $70, $06, $00, $88
+  .byte $78, $07, $00, $80
+  .byte $78, $08, $00, $88
 
 .segment "CHR"
 .incbin "graphics.chr"
