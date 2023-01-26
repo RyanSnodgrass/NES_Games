@@ -1,5 +1,11 @@
 .include "constants.inc"
 
+; The .importzp directive must go withing the ZEROPAGE segment,
+; even if you're not doing anything else with zeropage in this
+; file. I think you have to match segments when .importzp
+.segment "ZEROPAGE"
+.importzp player_x, player_y
+
 .segment "CODE"
 .import main
 .export reset_handler
@@ -12,6 +18,14 @@
 vblankwait:
 	BIT PPUSTATUS
 	BPL vblankwait
+
+	; initialize zero page
+	; not sure what the #$80 and #$a0 values are doing in the zero page.
+	LDA #$80
+	STA player_x
+	LDA #$a0
+	STA player_y
+
 	JMP main
 .endproc
 

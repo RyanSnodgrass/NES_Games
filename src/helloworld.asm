@@ -303,3 +303,14 @@ player_ship:
 
 .segment "CHR"
 .incbin "graphics.chr"
+
+; tell the assembler to reserve Zero Page memory
+.segment "ZEROPAGE"
+; reserve a single byte of memory with the .res directive to player_x label
+; A label tells the assembler to find the PRG ROM address associated with that
+; label and replace the label name with the address. Remember each line of ASM
+; code is stored in PRG ROM bank with its own address. Labels refer to those
+; addresses
+player_x: .res 1
+player_y: .res 1
+.exportzp player_x, player_y
