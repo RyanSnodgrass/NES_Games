@@ -8,7 +8,8 @@
 
 .proc nmi_handler
   ; I believe this defines where our sprite buffer starts. The "high" or left
-  ; byte ($02) defines the macro level address. While the "low" byte or right
+  ; byte ($02) defines a the macro level address. A "page" or contiguous block
+  ; of 256 bytes of memory. The "high" byte defines which page and the low byte
   ; byte ($00) defines exactly where we start. In this case we're telling it
   ; to start at address $0200. Because we can only define 256 attributes (64
   ; sprites), this neatly fits into a single byte for the micro level address.
@@ -67,30 +68,6 @@ load_palettes:
   INX
   CPX #$20
   BNE load_palettes
-
-  ; write sprite data
-  LDX #$00         ; Load into X immediate value of $00
-                   ; In other words zero out the X register
-  ; LDA #$70
-  ; STA $0200 ; Y-coord of first sprite
-  ; LDA #$05
-  ; STA $0201 ; tile number of first sprite
-  ; LDA #$00
-  ; STA $0202 ; attributes of first sprite
-  ; LDA #$80
-  ; STA $0203 ; X-coord of first sprite
-load_ship_sprites:
-  LDA ship_NW,X
-  STA $0200,X
-  LDA ship_NE,X
-  STA $0204,X
-  LDA ship_SW,X
-  STA $0208,X
-  LDA ship_SE,X
-  STA $020c,X
-  INX
-  CPX #$04
-  BNE load_ship_sprites
 
   ; write a nametable
   ; big stars first at position $206b
@@ -242,6 +219,30 @@ load_ship_sprites:
   STA PPUADDR
   LDA #%00000001
   STA PPUDATA
+
+  ; write sprite data
+  LDX #$00         ; Load into X immediate value of $00
+                   ; In other words zero out the X register
+  ; LDA #$70
+  ; STA $0200 ; Y-coord of first sprite
+  ; LDA #$05
+  ; STA $0201 ; tile number of first sprite
+  ; LDA #$00
+  ; STA $0202 ; attributes of first sprite
+  ; LDA #$80
+  ; STA $0203 ; X-coord of first sprite
+load_ship_sprites:
+  LDA ship_NW,X
+  STA $0200,X
+  LDA ship_NE,X
+  STA $0204,X
+  LDA ship_SW,X
+  STA $0208,X
+  LDA ship_SE,X
+  STA $020c,X
+  INX
+  CPX #$04
+  BNE load_ship_sprites
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
