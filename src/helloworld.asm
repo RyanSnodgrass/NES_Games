@@ -307,6 +307,42 @@ forever:
   RTS
 .endproc
 
+;; left ($00)
+;; right ($01)
+;.proc update_player
+;  PHP
+;  PHA
+;  TXA
+;  PHA
+;  TYA
+;  PHA
+;
+;  LDA player_x
+;  ; compare player_x value in accumulator to absolute $e0
+;  ; CMP subtracts (with the carry set) absolute value $e0 from Accumulator value
+;  ; in other words Accumulator value - $e0
+;  ; The process register will reveal the final result of that whetehr Negative,
+;  ; Zero, or Carry needed.
+;  ; Zero is easy to understand: 3 - 3 = 0. Two numbers that equal each other
+;  ; subtract out to zero.
+;  ; Negative is again pretty easy: 3 - 4 = -1. If Accumulator is less than
+;  ; $e0 than a negative flag is set (1).
+;  ; Carry is a bit less understandable. Just like we do math by hand on paper,
+;  ; when numbers are added that are larger than 9, we need to "carry" the 1 to
+;  ; the other column.
+;  CMP #$e0
+;  BCC not_at_right_edge
+;  ; if BCC is not taken we're further than $e0
+;  LDA #$00
+;  STA player_dir             ; start moving left
+;  JMP direction_set
+;
+;not_at_right_edge:
+;  LDA player_x
+;  CMP #$10                  ;  compare player_x value in accumulator to absolute $10
+;  BCS
+;
+;
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
@@ -343,4 +379,5 @@ player_ship:
 ; addresses
 player_x: .res 1
 player_y: .res 1
+player_dir: .res 1
 .exportzp player_x, player_y
