@@ -20,6 +20,7 @@
   STA OAMDMA       ; store value from accumulator ($02) into address at OAMDMA ($4014)
 
   ; update tiles *after* DMA transfer
+  JSR update_player
   JSR draw_player
 
   ; set scrolling of backround tiles to $00 at startup
@@ -307,42 +308,79 @@ forever:
   RTS
 .endproc
 
-;; left ($00)
-;; right ($01)
-;.proc update_player
-;  PHP
-;  PHA
-;  TXA
-;  PHA
-;  TYA
-;  PHA
-;
-;  LDA player_x
-;  ; compare player_x value in accumulator to absolute $e0
-;  ; CMP subtracts (with the carry set) absolute value $e0 from Accumulator value
-;  ; in other words Accumulator value - $e0
-;  ; The process register will reveal the final result of that whetehr Negative,
-;  ; Zero, or Carry needed.
-;  ; Zero is easy to understand: 3 - 3 = 0. Two numbers that equal each other
-;  ; subtract out to zero.
-;  ; Negative is again pretty easy: 3 - 4 = -1. If Accumulator is less than
-;  ; $e0 than a negative flag is set (1).
-;  ; Carry is a bit less understandable. Just like we do math by hand on paper,
-;  ; when numbers are added that are larger than 9, we need to "carry" the 1 to
-;  ; the other column.
-;  CMP #$e0
-;  BCC not_at_right_edge
-;  ; if BCC is not taken we're further than $e0
-;  LDA #$00
-;  STA player_dir             ; start moving left
-;  JMP direction_set
-;
-;not_at_right_edge:
-;  LDA player_x
-;  CMP #$10                  ;  compare player_x value in accumulator to absolute $10
-;  BCS
-;
-;
+; left ($00)
+; right ($01)
+.proc update_player
+  PHP
+  PHA
+  TXA
+  PHA
+  TYA
+  PHA
+
+  LDA player_x
+  ; compare player_x value in accumulator to absolute $e0
+  ; CMP subtracts (with the carry set) absolute value $e0 from Accumulator value
+  ; in other words Accumulator value - $e0
+  ; The process register will reveal the final result of that whether Negative,
+  ; Zero, or Carry needed.
+  ; Zero is easy to understand: 3 - 3 = 0. Two numbers that equal each other
+  ; subtract out to zero.
+  ; Negative is again pretty easy: 3 - 4 = -1. If Accumulator is less than
+  ; $e0 than a negative flag is set (1).
+  ; Carry is a bit less understandable. Just like we do math by hand on paper,
+  ; when numbers are added that are larger than 9, we need to "carry" the 1 to
+  ; the other column. When CMP is executed it sets the carry flag for subtraction.
+  ; So if the subtraction results in the
+  ; Really, CMP can be used for a variety of conditional checks. Whether greater
+  ; than, less than, or equal.
+  CMP #$e0
+  ; BCC or Branch if Carry Cleared means if a carry was needed in the last operation.
+  ; Atleast, in the context of CMP (subtraction). Because CMP starts with a 1 in the
+  ; carry bit (carry set) if the compared value is greater than the accumulator
+  ; than the carry was needed and will clear it out (0).
+  ; Simply for our purposes, was the Accumulator less than the right most edge $e0?
+  ; It is subtracting the right most edge's value from the player_x position.
+  BCC not_at_right_edge
+  ; if BCC is not taken we're further than $e0
+  LDA #$00
+  STA player_dir             ; start moving left
+  JMP direction_set
+
+not_at_right_edge:
+  LDA player_x
+  CMP #$10                  ;  compare player_x value in accumulator to absolute $10
+  ; BCS or Branch Carry Set. Was the Accumulator GREATER than left edge ($10)?
+  BCS direction_set
+  ; if BCS not taken, we are less than $10
+  LDA #$01
+  STA player_dir            ; Move player right
+
+direction_set:
+  ; now actually update player position
+  LDA player_dir
+  CMP #$01
+  BEQ move_right
+  ; if player_dir minus $01 was not zero
+  ; that means player_dir was $00 and
+  ; we need to move left
+  DEC player_x
+  JMP exit_subroutine
+
+move_right:
+  INC player_x
+
+exit_subroutine:
+  ; all done, clean up and return
+  PLA
+  TAY
+  PLA
+  TAX
+  PLA
+  PLP
+  RTS
+.endproc
+
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
