@@ -31,6 +31,7 @@
 .endproc
 
 .import reset_handler
+.import draw_starfield
 
 .export main
 .proc main
@@ -74,155 +75,11 @@ load_palettes:
   BNE load_palettes
 
   ; write a nametable
-  ; big stars first at position $206b
-  ; There are 4 nametables. addresses at $2000, $2400, $2800, $2c00
-  ; Weirdly, instead of writing directly to those addresses, we send
-  ; how many bytes away from the starting address the tile is. This might
-  ; be how we avoid colliding with some of our "keyword" addresses in the
-  ; low $2000s
-  LDA PPUSTATUS
-  LDA #$20       ; position BG sprite at $20 (high byte)
-  STA PPUADDR
-  LDA #$6b       ; position BG sprite at $6b (low byte)
-  STA PPUADDR
-  LDX #$2f       ; use BG sprite at position 2f
-  STX PPUDATA
+  LDX #$20                   ; Load first nametable address high byte ($2000)
+  JSR draw_starfield
 
-	LDA PPUSTATUS
-	LDA #$21
-	STA PPUADDR
-	LDA #$57
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$22
-	STA PPUADDR
-	LDA #$23
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$23
-	STA PPUADDR
-	LDA #$52
-	STA PPUADDR
-	STX PPUDATA
-
-	; next, small star 1
-	LDA PPUSTATUS
-	LDA #$20
-	STA PPUADDR
-	LDA #$74
-	STA PPUADDR
-	LDX #$2d
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$21
-	STA PPUADDR
-	LDA #$43
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$21
-	STA PPUADDR
-	LDA #$5d
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$21
-	STA PPUADDR
-	LDA #$73
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$22
-	STA PPUADDR
-	LDA #$2f
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$22
-	STA PPUADDR
-	LDA #$f7
-	STA PPUADDR
-	STX PPUDATA
-
-	; finally, small star 2
-	LDA PPUSTATUS
-	LDA #$20
-	STA PPUADDR
-	LDA #$f1
-	STA PPUADDR
-	LDX #$2e
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$21
-	STA PPUADDR
-	LDA #$a8
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$22
-	STA PPUADDR
-	LDA #$7a
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$23
-	STA PPUADDR
-	LDA #$44
-	STA PPUADDR
-	STX PPUDATA
-
-	LDA PPUSTATUS
-	LDA #$23
-	STA PPUADDR
-	LDA #$7c
-	STA PPUADDR
-	STX PPUDATA
-
-  ; little dude
-  LDA PPUSTATUS
-  LDA #$21
-  STA PPUADDR
-  LDA #$18
-  STA PPUADDR
-  LDX #$30
-  STX PPUDATA
-
-  ; finally an attribute
-  LDA PPUSTATUS
-  LDA #$23
-  STA PPUADDR
-  LDA #$c2
-  STA PPUADDR
-  LDA #%01000000
-  STA PPUDATA
-
-  LDA PPUSTATUS
-  LDA #$23
-  STA PPUADDR
-  LDA #$e0
-  STA PPUADDR
-  LDA #%00001100
-  STA PPUDATA
-
-  LDA PPUSTATUS
-  LDA #$23
-  STA PPUADDR
-  LDA #$d6
-  STA PPUADDR
-  LDA #%00000001
-  STA PPUDATA
+  LDX #$28                   ; Load second nametable for vertical scrolling ($2800)
+  JSR draw_starfield
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
@@ -365,10 +222,12 @@ direction_set:
   ; that means player_dir was $00 and
   ; we need to move left
   DEC player_x
+  DEC player_x
   JMP exit_subroutine
 
 move_right:
   INC player_x
+  INC player_y
 
 exit_subroutine:
   ; all done, clean up and return
