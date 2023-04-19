@@ -15,7 +15,9 @@ ld65 src/reset.o src/helloworld.o -C nes.cfg -o helloworld.nes
 ```
 
 ## To Run:
-`java -jar ~/Downloads/Nintaco_bin_2020-05-01/Nintaco.jar "helloworld.nes"`
+```
+java -jar ~/Downloads/Nintaco_bin_2020-05-01/Nintaco.jar "helloworld.nes"
+```
 
 
 ## Notes:

@@ -2,9 +2,9 @@ helloworld.nes: src/helloworld.o src/backgrounds.o src/reset.o nes.cfg
 	ld65 src/backgrounds.o src/reset.o src/helloworld.o -C nes.cfg -o helloworld.nes
 
 # target: src/helloworld.asm
-# prerequisites: src/constants.inc src/graphics.chr src/header.inc
+# prerequisites: src/constants.inc src/scrolling.chr src/header.inc
 # output: src/helloworld.o
-src/helloworld.o: src/helloworld.asm src/constants.inc src/graphics.chr src/header.inc
+src/helloworld.o: src/helloworld.asm src/constants.inc src/scrolling.chr src/header.inc
 	ca65 src/helloworld.asm -o src/helloworld.o
 
 # target: src/reset.asm

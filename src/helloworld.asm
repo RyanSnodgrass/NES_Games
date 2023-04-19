@@ -18,23 +18,42 @@
   STA OAMADDR      ; store value from accumulator ($00) into address at OAMADDR ($2003)
   LDA #$02         ; load immediate value $02 into accumulator
   STA OAMDMA       ; store value from accumulator ($02) into address at OAMDMA ($4014)
+  LDA #$00         ; load immediate value $00 into accumulator
 
   ; update tiles *after* DMA transfer
   JSR update_player
   JSR draw_player
 
-  ; set scrolling of backround tiles to $00 at startup
-  LDA #$00         ; Load immediate value $00 into accumulator
-  STA $2005        ; store value from accumulator ($00) into address $2005 (high byte)
-  STA $2005        ; store value from accumulator ($00) into address $2005 (low byte)
+  LDA scroll
+  CMP #$00 ; did we scroll to the end of a nametable?
+  BNE set_scroll_positions
+  ; if yes,
+  ; update base nametable
+  LDA ppuctrl_settings
+  EOR #%00000010 ; flip bit #1 to its opposite
+  STA ppuctrl_settings
+  STA PPUCTRL
+  LDA #240
+  STA scroll
+
+set_scroll_positions:
+  LDA #$00 ; X scroll first
+  STA PPUSCROLL
+  DEC scroll
+  LDA scroll ; then Y scroll
+  STA PPUSCROLL
   RTI
 .endproc
 
 .import reset_handler
 .import draw_starfield
+.import draw_objects
 
 .export main
 .proc main
+  LDA #239   ; Y is only 240 lines tall!
+  STA scroll
+
   ; write a palette
   ; PPUSTATUS is a read-only MMIO address. It is set by the PPU and gives info about it.
   ; It also resets the "address latch" for PPUADDR. It takes 2 writes to PPUADDR to fully
@@ -80,13 +99,18 @@ load_palettes:
 
   LDX #$28                   ; Load second nametable for vertical scrolling ($2800)
   JSR draw_starfield
+  JSR draw_objects
 
 vblankwait:       ; wait for another vblank before continuing
   BIT PPUSTATUS
   BPL vblankwait
 
+  ; set PPUCTRL after drawing all of our nametables. We'll need to store the
+  ; value that we send to PPUCTRL so that we can modify and re-use it later:
   LDA #%10010000  ; turn on NMIs, sprites use first pattern table
+  STA ppuctrl_settings
   STA PPUCTRL
+
   LDA #%00011110  ; turn on screen
   STA PPUMASK
 forever:
@@ -227,7 +251,6 @@ direction_set:
 
 move_right:
   INC player_x
-  INC player_y
 
 exit_subroutine:
   ; all done, clean up and return
@@ -265,7 +288,7 @@ player_ship:
   .byte $78, $08, $00, $88
 
 .segment "CHR"
-.incbin "graphics.chr"
+.incbin "scrolling.chr"
 
 ; tell the assembler to reserve Zero Page memory
 .segment "ZEROPAGE"
@@ -277,4 +300,6 @@ player_ship:
 player_x: .res 1
 player_y: .res 1
 player_dir: .res 1
+scroll: .res 1
+ppuctrl_settings: .res 1
 .exportzp player_x, player_y

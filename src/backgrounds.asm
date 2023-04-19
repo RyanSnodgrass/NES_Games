@@ -11,7 +11,8 @@
   ; Weirdly, instead of writing directly to those addresses, we send
   ; how many bytes away from the starting address the tile is. This might
   ; be how we avoid colliding with some of our "keyword" addresses in the
-  ; low $2000s
+  ; low $2000s. Update, I think this was a conscious decision to make it
+	; easier to swap out nametables.
 
   ; Interesting note, the first nametable addressses go from $2000 to $23bf.
   ; Then the first attribute table starts on the very next byte at $23c0 and goes to
