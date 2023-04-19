@@ -56,6 +56,17 @@ set_scroll_positions:
 
 .export main
 .proc main
+  jsr init_apu
+
+  lda #<279
+  sta $4002
+
+  lda #>279
+  sta $4003
+
+  lda #%10111111
+  sta $4000
+
   LDA #239   ; Y is only 240 lines tall!
   STA scroll
 
@@ -286,6 +297,26 @@ done_checking:
   ;
 .endproc
 
+.proc init_apu
+  ; Before using the APU, first initialize all the registers to known values that
+  ; silence all channels.
+  ; Init $4000-4013
+  ldy #$13
+loop_sounds:
+  lda sounds, y
+  sta $4000, y
+  dey
+  bpl loop_sounds
+
+  ; We have to skip over $4014 (OAMDMA)
+  lda #$0f
+  sta $4015
+  lda #$40
+  sta $4017
+
+  rts
+.endproc
+
 .segment "VECTORS"
 .addr nmi_handler, reset_handler, irq_handler
 
@@ -309,6 +340,14 @@ player_ship:
   .byte $70, $06, $00, $88
   .byte $78, $07, $00, $80
   .byte $78, $08, $00, $88
+
+sounds:
+  .byte $30,$08,$00,$00
+  .byte $30,$08,$00,$00
+  .byte $80,$00,$00,$00
+  .byte $30,$00,$00,$00
+  .byte $00,$00,$00,$00
+
 
 .segment "CHR"
 .incbin "scrolling.chr"
