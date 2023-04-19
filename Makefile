@@ -1,5 +1,5 @@
-helloworld.nes: src/helloworld.o src/backgrounds.o src/reset.o nes.cfg
-	ld65 src/backgrounds.o src/reset.o src/helloworld.o -C nes.cfg -o helloworld.nes
+helloworld.nes: src/helloworld.o src/backgrounds.o src/reset.o src/controllers.o nes.cfg
+	ld65 src/backgrounds.o src/reset.o src/controllers.o src/helloworld.o -C nes.cfg -o helloworld.nes
 
 # target: src/helloworld.asm
 # prerequisites: src/constants.inc src/scrolling.chr src/header.inc
@@ -19,5 +19,8 @@ src/reset.o: src/reset.asm src/constants.inc
 src/backgrounds.o: src/backgrounds.asm src/constants.inc
 	ca65 src/backgrounds.asm -o src/backgrounds.o
 
+src/controllers.o: src/controllers.asm src/constants.inc
+	ca65 src/controllers.asm -o src/controllers.o
+
 clean:
-	rm -f src/helloworld.o src/reset.o src/backgrounds.o
+	rm -f src/helloworld.o src/reset.o src/backgrounds.o src/controllers.o
